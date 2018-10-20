@@ -30,11 +30,22 @@ app.get('/api/bittrex', function(req, res) {
 		request('https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_ETH&depth=100')
 		.then((response) => {
 			let dataPolo = JSON.parse(response)
-			console.log('this is the trex' + dataTrex.result.buy);
-			console.log('this is the polo' + dataPolo.bids);
-			console.log(dataTrex.result.buy.length);
+			trexPrice = dataTrex.result
+			poloPrice = dataPolo.bids
 			for (i = 0; i < dataTrex.result.buy.length; i++) {
-				console.log(dataTrex.result.buy[i])
+				console.log(trexPrice.buy[i].Rate.toString().split('').splice(0, 7).join(''))
+//				console.log(trexPrice.buy[i].Rate)
+//				newRate = trexPrice.buy[i].Rate.split('').pop([5])
+			}
+			console.log(dataPolo.bids[0][0])
+			for (i = 0; i < dataTrex.result.buy.length; i++) {
+				// console.log(trexPrice.buy[i].Rate)
+				for (j = 0; j < poloPrice.length; j++) {
+					myOrderBook = []
+					if (poloPrice[j][0] === trexPrice.buy[i].Rate) {
+						console.log('match')
+					}
+				}
 			};
 			data = {
 				trex: dataTrex.result.buy,
