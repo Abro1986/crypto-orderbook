@@ -1,0 +1,33 @@
+{
+  "name": "flywater-back",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "dependencies": {
+    "@sendgrid/mail": "^6.2.1",
+    "async": "^2.6.0",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.3",
+    "mongoose": "^5.0.18",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5",
+    "sendgrid": "^5.2.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abro1986/Flywater-back.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Abro1986/Flywater-back/issues"
+  },
+  "homepage": "https://github.com/Abro1986/Flywater-back#readme"
+}
