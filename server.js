@@ -32,8 +32,8 @@ app.get('/api/bittrex', function(req, res) {
 			let dataPolo = JSON.parse(response)
 			trexPrice = dataTrex.result
 			poloPrice = dataPolo.bids
-			console.log(dataPolo)
-			console.log(dataTrex.result.sell)
+//			console.log(dataPolo.asks)
+//			console.log(dataTrex.result.sell)
 			data = {
 				trex: dataTrex.result.buy,
 				polo: dataPolo.bids
@@ -43,41 +43,50 @@ app.get('/api/bittrex', function(req, res) {
 			buyOrderBook = []
 			for (i = 0; i < dataTrex.result.buy.length; i++) {
 				data.trex[i].Rate = trexPrice.buy[i].Rate.toString().split('').splice(0, 8).join('')
+				trexPrice.sell[i].Rate = trexPrice.sell[i].Rate.toString().split('').splice(0, 8).join('')
 			}
+
 			for (i = 0; i < data.polo.length; i++) {
 				data.polo[i][0] = data.polo[i][0].toString().split('').splice(0, 8).join('')
-//				console.log(data.polo[i][0])
+				dataPolo.asks[i][0] = dataPolo.asks[i][0].toString().split('').splice(0, 8).join('')
 			}
 			for (i = 0; i < dataTrex.result.buy.length; i++) {
 				// console.log(trexPrice.buy[i].Rate)
 				for (j = 0; j < poloPrice.length; j++) {
-					
-						combinedVolume = data.polo[j][1] + data.trex[i].Quantity
+						combinedAskVolume = dataPolo.asks[j][1] + dataTrex.result.sell[i].Quantity
+						combinedBidVolume = data.polo[j][1] + data.trex[i].Quantity
 					if (data.polo[j][0] === data.trex[i].Rate) {
 						// console.log(data.polo[j][1])
 						// console.log(data.trex[i].Quantity)
 						// console.log(combinedVolume)
 						bidData = {
 							Rate: data.polo[j][0],
-							Quantity: combinedVolume,
+							Quantity: combinedBidVolume,
 							key: i
 						}
 //						console.log(bidData)
 						buyOrderBook.push(bidData) 
 //						console.log(myOrderBook)
+					} else if (dataPolo.asks[j][0] === dataTrex.result.sell[i].Rate) {
+						askData = {
+							Rate: dataPolo.asks[j][0],
+							Quantity: combinedAskVolume,
+							key: i
+						}
+						sellOrderBook.push(askData)
 					}
 				}
 			};
-			return data
-	}).then((data) => {
-		res.send(data)
-	})
-	.catch((err) => {
-		res.send(err)
-	
-	})
-	})
-	
+			console.log(sellOrderBook)
+			console.log(buyOrderBook)
+			return dataPolo
+		}).then((dataPolo) => {
+			res.send(dataPolo)
+		})
+		.catch((err) => {
+			res.send(err)	
+		})
+	})	
 });
 
 	
