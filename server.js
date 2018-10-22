@@ -18,101 +18,86 @@ app.get('/api/all', function(req, res) {
 	res.send('hello')
 })
 
-app.get('/api/bittrex', function(req, res) {
+//the main api end point for the node application
+app.get('/api/orderbook', function(req, res) {
+	//request orderbook data from bittrex's public api for the BTC-ETH market and return a promise to pass the response
 	request('https://bittrex.com/api/v1.1/public/getorderbook?market=BTC-ETH&type=both')
 	.then((response) => {
+		//parses XML to JSON
 		let dataTrex = JSON.parse(response)
 		buydataTrex = dataTrex.result.buy
 		
 		
 		return dataTrex
 	}).then((dataTrex) => {
+		//request orderbook data from poloniex's public api for the BTC_ETH market and return a promise to pass the response
 		request('https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_ETH&depth=100')
 		.then((response) => {
-			let dataPolo = JSON.parse(response)
-			trexPrice = dataTrex.result
-			poloPrice = dataPolo.bids
-//			console.log(dataPolo.asks)
-//			console.log(dataTrex.result.sell)
-			data = {
-				trex: dataTrex.result.buy,
-				polo: dataPolo.bids
-			};
-//			console.log(data.polo.length);
-			sellOrderBook= []
-			buyOrderBook = []
-			for (i = 0; i < dataTrex.result.buy.length; i++) {
-				data.trex[i].Rate = trexPrice.buy[i].Rate.toString().split('').splice(0, 8).join('')
-				trexPrice.sell[i].Rate = trexPrice.sell[i].Rate.toString().split('').splice(0, 8).join('')
+			//parses XML to JSON
+			let dataPolo = JSON.parse(response);
+			//sets variables for the bids and asks arrays for both orderbooks based on JSON names using dot notation
+			let poloBids = dataPolo.bids;
+			let poloAsks = dataPolo.asks;
+			let trexBids = dataTrex.result.buy;
+			let trexAsks = dataTrex.result.sell;
+			//create empty arrays to house the combined order books
+			let sellOrderBook= [];
+			let buyOrderBook = [];			
+			//lopps through both the bids and asks of the bittrex array and sets the price point to only have six decimal places.
+			//I feel unsure about this step as it means that the total price will not be as accurate, but with the market
+			//everchanging and being so specific in respects to either orderbook it was hard to find specific similarities 
+			//between price points. being less specific started to yield matches though so I went with it
+			for (i = 0; i < trexBids.length; i++) {
+				trexBids[i].Rate = trexBids[i].Rate.toString().split('').splice(0, 8).join('');
+				trexAsks[i].Rate = trexAsks[i].Rate.toString().split('').splice(0, 8).join('');
 			}
-
-			for (i = 0; i < data.polo.length; i++) {
-				data.polo[i][0] = data.polo[i][0].toString().split('').splice(0, 8).join('')
-				dataPolo.asks[i][0] = dataPolo.asks[i][0].toString().split('').splice(0, 8).join('')
+			//same as above but with the poloniex array
+			for (i = 0; i < poloBids.length; i++) {
+				poloBids[i][0] = poloBids[i][0].toString().split('').splice(0, 8).join('');
+				poloAsks[i][0] = poloAsks[i][0].toString().split('').splice(0, 8).join('');
 			}
-			for (i = 0; i < dataTrex.result.buy.length; i++) {
-				// console.log(trexPrice.buy[i].Rate)
-				for (j = 0; j < poloPrice.length; j++) {
-						combinedAskVolume = dataPolo.asks[j][1] + dataTrex.result.sell[i].Quantity
-						combinedBidVolume = data.polo[j][1] + data.trex[i].Quantity
-					if (data.polo[j][0] === data.trex[i].Rate) {
-						// console.log(data.polo[j][1])
-						// console.log(data.trex[i].Quantity)
-						// console.log(combinedVolume)
+			// loops through the bittrex and poloniex arrays and compares each rate between the rates of the others
+			for (i = 0; i < trexBids.length; i++) {
+				for (j = 0; j < poloBids.length; j++) {
+						combinedAskVolume = poloAsks[j][1] + trexAsks[i].Quantity;
+						combinedBidVolume = poloBids[j][1] + trexBids[i].Quantity;
+					//if there is a match in price point it will create an object that has the matching rate, the combined volume
+					//that is calculated from the variable in the interation of the loop from above for the combined bids order book
+					//and adds a key that corresponds to the iteration of the loop. It is then pushed into the buyOrderBook	
+					if (poloBids[j][0] === trexBids[i].Rate) {
 						bidData = {
-							Rate: data.polo[j][0],
+							Rate: poloBids[j][0],
 							Quantity: combinedBidVolume,
 							key: i
-						}
-//						console.log(bidData)
-						buyOrderBook.push(bidData) 
-//						console.log(myOrderBook)
-					} else if (dataPolo.asks[j][0] === dataTrex.result.sell[i].Rate) {
+						};
+						buyOrderBook.push(bidData); 
+					//same as the conditional statement above but for the asks and sellOrderBook
+					} else if (poloAsks[j][0] === trexAsks[i].Rate) {
 						askData = {
-							Rate: dataPolo.asks[j][0],
+							Rate: poloAsks[j][0],
 							Quantity: combinedAskVolume,
 							key: i
-						}
-						sellOrderBook.push(askData)
+						};
+						sellOrderBook.push(askData);
 					}
 				}
-			};
-
-			// console.log(sellOrderBook)
-			// console.log(buyOrderBook)
+			}
+			//create a combined order book with the two arrays from the sell and buy arrays that were being filled in the loops above
 			combinedOrderBook = {
 				asks: sellOrderBook,
 				bids: buyOrderBook
-			}
-			console.log(combinedOrderBook)
-			return combinedOrderBook
+			};
+			return combinedOrderBook;
+		//promise resolution then pass the returned combined orderbook to be served up as JSON data	
 		}).then((combinedOrderBook) => {
-			res.json(combinedOrderBook)
+			res.json(combinedOrderBook);
 		})
 		.catch((err) => {
-			res.send(err)	
-		})
-	})	
+			res.send(err);	
+		});
+	});	
 });
 
-	
-
-
-app.get('/api/poloniex', function(req, res) {
-	request('https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_ETH&depth=10').then((response) => {
-		let data = response
-		console.log(data)
-		console.log(data[1])
-		return data
-	}).then((data) => {
-
-	res.send(data)
-	})
-	.catch((err) => {
-		res.send(err)
-	});
-	
-});
 
 let port = process.env.PORT || 3001;
 
