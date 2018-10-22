@@ -38,7 +38,7 @@ app.get('/api/bittrex', function(req, res) {
 				trex: dataTrex.result.buy,
 				polo: dataPolo.bids
 			};
-			console.log(data.polo.length);
+//			console.log(data.polo.length);
 			sellOrderBook= []
 			buyOrderBook = []
 			for (i = 0; i < dataTrex.result.buy.length; i++) {
@@ -77,11 +77,17 @@ app.get('/api/bittrex', function(req, res) {
 					}
 				}
 			};
-			console.log(sellOrderBook)
-			console.log(buyOrderBook)
-			return dataPolo
-		}).then((dataPolo) => {
-			res.send(dataPolo)
+
+			// console.log(sellOrderBook)
+			// console.log(buyOrderBook)
+			combinedOrderBook = {
+				asks: sellOrderBook,
+				bids: buyOrderBook
+			}
+			console.log(combinedOrderBook)
+			return combinedOrderBook
+		}).then((combinedOrderBook) => {
+			res.json(combinedOrderBook)
 		})
 		.catch((err) => {
 			res.send(err)	
@@ -108,7 +114,7 @@ app.get('/api/poloniex', function(req, res) {
 	
 });
 
-let port = process.env.PORT || 3000;
+let port = process.env.PORT || 3001;
 
 app.listen(port, function(){
 	console.log(`listening on port ${ port }`);
