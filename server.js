@@ -19,19 +19,16 @@ app.get('/api/all', function(req, res) {
 })
 
 //the main api end point for the node application
-app.get('/api/orderbook', function(req, res) {
+app.post('/api/orderbook', function(req, res) {
 	//request orderbook data from bittrex's public api for the BTC-ETH market and return a promise to pass the response
-	request('https://bittrex.com/api/v1.1/public/getorderbook?market=BTC-ETH&type=both')
+	request(`https://bittrex.com/api/v1.1/public/getorderbook?market=${req.body.first}-${req.body.second}&type=both`)
 	.then((response) => {
 		//parses XML to JSON
-		let dataTrex = JSON.parse(response)
-		buydataTrex = dataTrex.result.buy
-		
-		
+		let dataTrex = JSON.parse(response);		
 		return dataTrex
 	}).then((dataTrex) => {
 		//request orderbook data from poloniex's public api for the BTC_ETH market and return a promise to pass the response
-		request('https://poloniex.com/public?command=returnOrderBook&currencyPair=BTC_ETH&depth=100')
+		request(`https://poloniex.com/public?command=returnOrderBook&currencyPair=${req.body.first}_${req.body.second}&depth=100`)
 		.then((response) => {
 			//parses XML to JSON
 			let dataPolo = JSON.parse(response);
@@ -89,7 +86,8 @@ app.get('/api/orderbook', function(req, res) {
 			};
 			return combinedOrderBook;
 		//promise resolution then pass the returned combined orderbook to be served up as JSON data	
-		}).then((combinedOrderBook) => {
+		})
+		.then((combinedOrderBook) => {
 			res.json(combinedOrderBook);
 		})
 		.catch((err) => {
